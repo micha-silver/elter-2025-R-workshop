@@ -1,0 +1,18 @@
+---
+title: "Analyzing Spatial Data with R - exercises"
+author: "Micha Silver"
+date: "2025-06-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Required packages
+
+```{r pkgs}
+pkg_list <- c("terra", "sf", "CDSE")
+invisible(lapply(pkg_list, library, character.only = TRUE))
+```
+
