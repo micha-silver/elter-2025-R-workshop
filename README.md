@@ -1,7 +1,9 @@
 ---
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
+linkcolor: blue
+urlcolor: blue
 ---
 
 ![](eLTER_SC_Logo.png)
@@ -16,11 +18,13 @@ and contains the practice exercises that will be covered.
 
 ### Required Software
 
+Each workshop participant should do the following on her laptop:
+
 - Install a recent version of `R`, for your operating system from [CRAN](https://cran.r-project.org)
 - Windows users should add the Rtools toolchain from:
   - [RTools](https://cran.r-project.org/bin/windows/Rtools/)
   - matching the version of `R` that was installed
-- Install RStudio from [Posit](https://posit.co/download/rstudio-desktop/)
+- Install RStudio&trade; from [Posit](https://posit.co/download/rstudio-desktop/)
 - Once `R` is installed, the following packages should also be added:
   - `terra`, `sf`, `remotes`, `CDSE`, `rOPTRAM`
   - At the R command line, run:
@@ -29,6 +33,17 @@ and contains the practice exercises that will be covered.
   - `remotes::install_github("ropensci/rOPTRAM")`
 
 ### Exercise data
+
+Each participant can download the exercises and data in advance in one of three ways:
+
+- Particpants who are familiar with `git` can clone the repository:
+
+`git clone https://github.com/micha-silver/elter-2025-R-workshop.git`
+
+- The same result can be achieved within RStudio&trade; by starting a new `git` based project, pointing to the same repository;
+
+- Otherwise, the workshop material can be downloaded as a zip archive from [here](https://github.com/micha-silver/elter-2025-R-workshop/archive/refs/heads/main.zip) 
+
 
 ## License
 
