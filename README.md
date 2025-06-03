@@ -1,8 +1,10 @@
 ---
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
+
+![](eLTER_SC_Logo.png)
 
 # Analyzing Remote Sensing Data with R
 
@@ -19,6 +21,12 @@ and contains the practice exercises that will be covered.
   - [RTools](https://cran.r-project.org/bin/windows/Rtools/)
   - matching the version of `R` that was installed
 - Install RStudio from [Posit](https://posit.co/download/rstudio-desktop/)
+- Once `R` is installed, the following packages should also be added:
+  - `terra`, `sf`, `remotes`, `CDSE`, `rOPTRAM`
+  - At the R command line, run:
+  - `install.packages(c("terra", "sf", "remotes"), dependencies = TRUE)`
+  - `remotes::install_github("zivankaraman/CDSE")`
+  - `remotes::install_github("ropensci/rOPTRAM")`
 
 ### Exercise data
 
