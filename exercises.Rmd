@@ -2,7 +2,9 @@
 title: "Analyzing Spatial Data with R - exercises"
 author: "Micha Silver"
 date: "2025-06-03"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -12,7 +14,50 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Required packages
 
 ```{r pkgs}
-pkg_list <- c("terra", "sf", "CDSE")
+pkg_list <- c("terra", "sf", "CDSE", "knitr")
 invisible(lapply(pkg_list, library, character.only = TRUE))
 ```
+## Get CDSE credentials
+
+and prepare OAuth token for API access
+
+```{r creds, results='hide'}
+creds <- read.csv("credentials.csv")
+tok <- CDSE::GetOAuthToken(id = creds$clientid, secret = creds$secret)
+```
+### Set query parameters
+
+- Dates
+- AOI file
+- Which "collection" (Sentinel-2 Level L2A)
+
+```{r params}
+aoi <- sf::st_read(file.path("GIS", "Fuenteduque_aoi.gpkg"))
+from_date <- "2025-02-01" 
+to_date <- "2025-04-20"
+collection <- "sentinel-2-l2a"
+max_cloud <- 15
+```
+### Get list of available images
+
+```{r catalog}
+img_list <- CDSE::SearchCatalog(aoi = aoi,
+                                from = from_date,
+                                to = to_date,
+                                collection = collection,
+                                token = tok)
+# How many images available?
+message("Number of available images: ", nrow(img_list))
+```
+
+
+### Remove images with high cloud cover
+
+```{r cloud-filter}
+img_list <- img_list[img_list$tileCloudCover <= max_cloud,]
+message("Number of images after cloud filtering: ", nrow(img_list))
+# Which dates?
+knitr::kable(img_list$acquisitionDate)
+```
+
 
