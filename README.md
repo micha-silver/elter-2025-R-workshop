@@ -1,4 +1,5 @@
 ---
+title: eLTER Science Conference - 2025 - Tampere,FI
 output:
   pdf_document: default
   html_document: default
@@ -31,6 +32,21 @@ Each workshop participant should do the following on her laptop:
   - `install.packages(c("terra", "sf", "remotes"), dependencies = TRUE)`
   - `remotes::install_github("zivankaraman/CDSE")`
   - `remotes::install_github("ropensci/rOPTRAM")`
+
+### Authentication on Copernicus DataSpace (CDSE)
+
+- Browse to CDSE [portal](https://dataspace.copernicus.eu)
+- Follow steps below to register on CDSE and prepare clientid and secret.
+- Save both the clientid and secret to a `csv` text file.
+
+| CDSE Authentication | Steps |
+| ----------------------------------- | ----------------------------------- |
+|![CDSE-1](../Presentation/figures/CDSE_1.png)|![CDSE-2](../Presentation/figures/CDSE_2.png)|
+|![CDSE-3](../Presentation/figures/CDSE_3.png)|![CDSE-4](../Presentation/figures/CDSE_4.png)|
+| Create a new OAuth client | Set expiration date and click Create |
+|![CDSE-5](../Presentation/figures/CDSE_5.png)|![CDSE-6](../Presentation/figures/CDSE_6.png)|
+| Copy both the clientid and the secret... | ... and **save** to `csv` file |
+|![CDSE-7](../Presentation/figures/CDSE_7.png)|![CDSE-8](../Presentation/figures/CDSE_8.png)|
 
 ### Exercise data
 
