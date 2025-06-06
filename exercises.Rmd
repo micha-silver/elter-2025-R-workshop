@@ -3,8 +3,9 @@ title: "Analyzing Spatial Data with R - exercises"
 author: "Micha Silver"
 date: "2025-06-03"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
+bibliography: references.bib  
 ---
 
 ```{r setup, include=FALSE}
@@ -14,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Required packages
 
 ```{r pkgs}
-pkg_list <- c("terra", "sf", "CDSE", "knitr")
+pkg_list <- c("terra", "sf", "CDSE", "knitr", "leaflet", "ggplot2")
 invisible(lapply(pkg_list, library, character.only = TRUE))
 ```
 ## Get CDSE credentials
@@ -33,10 +34,11 @@ tok <- CDSE::GetOAuthToken(id = creds$clientid, secret = creds$secret)
 
 ```{r params}
 aoi <- sf::st_read(file.path("GIS", "Fuenteduque_aoi.gpkg"))
-from_date <- "2025-02-01" 
-to_date <- "2025-04-20"
+from_date <- "2024-12-30" 
+to_date <- "2025-03-30"
 collection <- "sentinel-2-l2a"
-max_cloud <- 15
+max_cloud <- 20
+tileid <- "29SQB"  # Download only one Copernicus tile
 ```
 ### Get list of available images
 
@@ -53,11 +55,125 @@ message("Number of available images: ", nrow(img_list))
 
 ### Remove images with high cloud cover
 
+#### Also select only one image tile, "29SQB"
+
 ```{r cloud-filter}
 img_list <- img_list[img_list$tileCloudCover <= max_cloud,]
+img_list <- img_list[grepl(tileid, img_list$sourceId),]
 message("Number of images after cloud filtering: ", nrow(img_list))
 # Which dates?
 knitr::kable(img_list$acquisitionDate)
 ```
+### Loop over available images
 
+```{r water-surface}
+# Setup Output directory
+Output_dir <- "Output"
+if (!dir.exists(Output_dir)) {
+  dir.create(Output_dir)
+}
+
+# We already have collection from above;
+# Refresh token:
+tok <- CDSE::GetOAuthToken(id = creds$clientid, secret = creds$secret)
+
+# Use lapply to loop over img_list data.frame:
+water_rast_list <- lapply(1:nrow(img_list), function(i) {
+  dte <- img_list$acquisitionDate[i]
+  
+  # Save processed water surface as Geotiff
+  rast_file <- file.path(Output_dir, paste0("water_", dte, ".tif"))
+  # But, if file already exists (from previous run), just skip download
+  if (!file.exists(rast_file)) {
+  water_rast <- CDSE::GetImage(aoi = aoi,
+                               time_range = dte,
+                               collection = collection,
+                               script = "MNDWI_masked.js",
+                               resolution = 20, # Use lower res of SWIR band
+                               token = tok)
+  
+  terra::writeRaster(water_rast, rast_file)
+  } else {
+    #message("Raster file: ", rast_file, " already exists, skipping.")
+  }
+  return(rast_file)
+})
+water_rast_list <- unlist(water_rast_list)
+message("Saved: ", length(water_rast_list), " water surface raster files.")
+```
+### Plot water surface map
+
+```{r plot1}
+# Take first water surface map in list
+r <- rast(water_rast_list[1])
+leaflet() |> addTiles() |>
+  addRasterImage(r)
+```
+
+### Threshold to get just water surfaces
+
+#### Using the threshold value 0.09 (@xu_modification_2006)
+
+```{r water-thresh}
+thresh <- 0.09
+reclass_mat <- matrix(c(-1.0, thresh, NA, thresh, 1.0, 1), ncol=3, byrow=TRUE)
+reclass_mat
+water_thresh_list <- lapply(water_rast_list, function(x) {
+  r <- terra::classify(rast(x), reclass_mat)
+  water_thresh_file <- gsub("water", "water_thresh", x)
+  terra::writeRaster(r, water_thresh_file, overwrite = TRUE)
+  return(water_thresh_file)
+})
+water_thresh_list <- unlist(water_thresh_list)
+```
+
+### Plot thresholded water surface
+
+```{r water-thresh1}
+# Take first water surface map in list
+r <- rast(water_thresh_list[1])
+leaflet() |> addTiles() |>
+  addRasterImage(r)
+```
+
+```{r water-thresh2}
+# and the second image
+r <- rast(water_thresh_list[2])
+leaflet() |> addTiles() |>
+  addRasterImage(r)
+```
+
+
+```{r water-thresh3}
+# Now the last water surface map in list
+r <- rast(water_thresh_list[length(water_thresh_list)])
+leaflet() |> addTiles() |>
+  addRasterImage(r)
+```
+
+### Extract value at point for all water rasters
+
+```{r extract}
+coords <- data.frame("lon" = -6.3710,
+                     "lat" = 37.0375)
+pt <- vect(coords, crs = "EPSG:4326")
+water_val_list <- lapply(water_rast_list, function(x) {
+  r <- rast(x)
+  val <- terra::extract(r, pt, ID = FALSE)
+  # Remove extra file name character, leave only date for plotting
+  dte <- basename(x)
+  dte <- gsub("water_", "", dte)
+  dte <- gsub(".tif", "", dte)
+  val_df <- data.frame("Image_date" = dte,
+                       "Water_Index" = val)
+  names(val_df) <- c("Image", "Water_value")
+  return(val_df)
+})
+# Bind list into data.frame
+vals_df <- do.call(rbind, water_val_list)
+knitr::kable(vals_df)
+ggplot(vals_df) +
+  geom_col(aes(x=Image, y=Water_value), fill = "blue") +
+  ggtitle("Water Index", subtitle = paste("at location", coords$lon, coords$lat))
+```
 
