@@ -1,8 +1,8 @@
 ---
 title: eLTER Science Conference - 2025 - Tampere,FI
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 linkcolor: blue
 urlcolor: blue
 ---
@@ -45,20 +45,25 @@ Each workshop participant should do the following on her laptop:
 |![CDSE-3](../Presentation/figures/CDSE_3.png)|![CDSE-4](../Presentation/figures/CDSE_4.png)|
 | Create a new OAuth client | Set expiration date and click Create |
 |![CDSE-5](../Presentation/figures/CDSE_5.png)|![CDSE-6](../Presentation/figures/CDSE_6.png)|
-| Copy both the clientid and the secret... | ... and **save** to `csv` file |
+| Copy both the clientid and the secret... | ... and **save** to `credentials.csv` file |
 |![CDSE-7](../Presentation/figures/CDSE_7.png)|![CDSE-8](../Presentation/figures/CDSE_8.png)|
 
-### Exercise data
+## Exercise data
 
 Each participant can download the exercises and data in advance in one of three ways:
 
-- Particpants who are familiar with `git` can clone the repository:
+- Particpants who are familiar with `git` can clone the repository: 
 
 `git clone https://github.com/micha-silver/elter-2025-R-workshop.git`
 
-- The same result can be achieved within RStudio&trade; by starting a new `git` based project, pointing to the same repository;
+- The same result can be achieved within RStudio&trade; by starting a new Version Control based project, pointing to the same repository;
 
-- Otherwise, the workshop material can be downloaded as a zip archive from [here](https://github.com/micha-silver/elter-2025-R-workshop/archive/refs/heads/main.zip) 
+- Otherwise, the workshop material can be downloaded as a zip archive from [here](https://github.com/micha-silver/elter-2025-R-workshop/archive/refs/heads/main.zip) .
+
+
+Put your `credentials.csv` file into the same directory as the exercise.
+
+Start RStudio&trade; and load the project "elter-2025-R-workshop".
 
 
 ## License
