@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Required packages
 
-```{r pkgs}
+```{r pkgs, results='hide', message=FALSE}
 pkg_list <- c("terra", "sf", "CDSE", "knitr", "leaflet", "ggplot2")
 invisible(lapply(pkg_list, library, character.only = TRUE))
 ```
@@ -34,8 +34,8 @@ tok <- CDSE::GetOAuthToken(id = creds$clientid, secret = creds$secret)
 
 ```{r params}
 aoi <- sf::st_read(file.path("GIS", "Fuenteduque_aoi.gpkg"))
-from_date <- "2024-12-30" 
-to_date <- "2025-03-30"
+from_date <- "2025-01-01" 
+to_date <- "2025-04-30"
 collection <- "sentinel-2-l2a"
 max_cloud <- 20
 tileid <- "29SQB"  # Download only one Copernicus tile
@@ -51,8 +51,6 @@ img_list <- CDSE::SearchCatalog(aoi = aoi,
 # How many images available?
 message("Number of available images: ", nrow(img_list))
 ```
-
-
 ### Remove images with high cloud cover
 
 #### Also select only one image tile, "29SQB"
@@ -61,7 +59,9 @@ message("Number of available images: ", nrow(img_list))
 img_list <- img_list[img_list$tileCloudCover <= max_cloud,]
 img_list <- img_list[grepl(tileid, img_list$sourceId),]
 message("Number of images after cloud filtering: ", nrow(img_list))
-# Which dates?
+# Sort by dates
+img_list <- img_list[order(img_list$acquisitionDate),]
+# Which image dates are available?
 knitr::kable(img_list$acquisitionDate)
 ```
 ### Loop over available images
@@ -131,32 +131,52 @@ water_thresh_list <- unlist(water_thresh_list)
 
 ```{r water-thresh1}
 # Take first water surface map in list
-r <- rast(water_thresh_list[1])
-leaflet() |> addTiles() |>
+thresh_file <- water_thresh_list[1]
+r <- rast(thresh_file)
+leaflet() |> 
+  addTiles() |>
   addRasterImage(r)
 ```
 
 ```{r water-thresh2}
 # and the second image
-r <- rast(water_thresh_list[2])
-leaflet() |> addTiles() |>
+thresh_file <- water_thresh_list[2]
+r <- rast(thresh_file)
+leaflet() |> 
+  addTiles() |>
   addRasterImage(r)
 ```
 
 
 ```{r water-thresh3}
 # Now the last water surface map in list
-r <- rast(water_thresh_list[length(water_thresh_list)])
-leaflet() |> addTiles() |>
+thresh_file <- water_thresh_list[length(water_thresh_list)]
+r <- rast(thresh_file)
+leaflet() |>
+  addTiles() |>
   addRasterImage(r)
 ```
 
 ### Extract value at point for all water rasters
 
-```{r extract}
+#### Choose a sampling point
+
+```{r sample-point}
+# Show the point on map
 coords <- data.frame("lon" = -6.3710,
                      "lat" = 37.0375)
 pt <- vect(coords, crs = "EPSG:4326")
+r <- rast(water_rast_list[2])
+leaflet() |>
+  addTiles() |>
+  addRasterImage(r) |>
+  addCircleMarkers(lng = coords$lon, lat = coords$lat, radius = 7,
+                   fillColor = "red", stroke = FALSE, fillOpacity = 1)
+```
+
+#### Extract time series of MNDWI values at that point
+
+```{r extract}
 water_val_list <- lapply(water_rast_list, function(x) {
   r <- rast(x)
   val <- terra::extract(r, pt, ID = FALSE)
@@ -164,16 +184,38 @@ water_val_list <- lapply(water_rast_list, function(x) {
   dte <- basename(x)
   dte <- gsub("water_", "", dte)
   dte <- gsub(".tif", "", dte)
-  val_df <- data.frame("Image_date" = dte,
-                       "Water_Index" = val)
-  names(val_df) <- c("Image", "Water_value")
+  val_df <- data.frame(as.Date(dte), val)
+  names(val_df) <- c("Image_date", "MNDWI")
   return(val_df)
 })
 # Bind list into data.frame
 vals_df <- do.call(rbind, water_val_list)
 knitr::kable(vals_df)
-ggplot(vals_df) +
-  geom_col(aes(x=Image, y=Water_value), fill = "blue") +
-  ggtitle("Water Index", subtitle = paste("at location", coords$lon, coords$lat))
 ```
 
+#### Time series plit
+
+```{r plot-timeseries}
+ggplot(vals_df) +
+  geom_col(aes(x=Image_date, y=MNDWI), fill = "blue") +
+  geom_hline(aes(yintercept = 0.09,
+            color = "red") ) +
+  ggtitle("MNDWI values",
+          subtitle = paste("at location", coords$lon, coords$lat)) +
+  theme(axis.text.x = element_text(angle = 30),
+        legend.position = "")
+```
+
+## License
+
+eLTER Workshop-Analyzing Remote Sensing Data in R 
+
+© 2025 by Micha Silver
+
+is licensed under Creative Commons Attribution-ShareAlike 4.0 International.
+
+To view a copy of this license, visit
+
+https://creativecommons.org/licenses/by-sa/4.0/
+
+## References
