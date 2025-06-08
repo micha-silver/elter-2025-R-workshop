@@ -5,31 +5,35 @@ date: "2025-06-03"
 output:
   html_document: default
   pdf_document: default
-bibliography: references.bib  
+bibliography: references.bib
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Required packages
+## Preparation
+
+### Required packages
 
 ```{r pkgs, results='hide', message=FALSE}
 pkg_list <- c("terra", "sf", "CDSE", "knitr", "leaflet", "ggplot2")
 invisible(lapply(pkg_list, library, character.only = TRUE))
 ```
-## Get CDSE credentials
+### Get CDSE credentials
 
-and prepare OAuth token for API access
+#### and prepare OAuth token for API access
 
 ```{r creds, results='hide'}
 creds <- read.csv("credentials.csv")
 tok <- CDSE::GetOAuthToken(id = creds$clientid, secret = creds$secret)
 ```
+
 ### Set query parameters
 
 - Dates
-- AOI file
+- AOI file, a polygon covering the marsh area of Doñana Park (@green_groundwater_2024)
 - Which "collection" (Sentinel-2 Level L2A)
 
 ```{r params}
@@ -38,9 +42,16 @@ from_date <- "2025-01-01"
 to_date <- "2025-04-30"
 collection <- "sentinel-2-l2a"
 max_cloud <- 20
-tileid <- "29SQB"  # Download only one Copernicus tile
+# Download only one Copernicus tile
+tileid <- "29SQB"
+
+# Setup Output directory
+Output_dir <- "Output"
+if (!dir.exists(Output_dir)) {
+  dir.create(Output_dir)
+}
 ```
-### Get list of available images
+## Get list of available images
 
 ```{r catalog}
 img_list <- CDSE::SearchCatalog(aoi = aoi,
@@ -53,7 +64,7 @@ message("Number of available images: ", nrow(img_list))
 ```
 ### Remove images with high cloud cover
 
-#### Also select only one image tile, "29SQB"
+### Also select only one image tile, "29SQB"
 
 ```{r cloud-filter}
 img_list <- img_list[img_list$tileCloudCover <= max_cloud,]
@@ -64,15 +75,12 @@ img_list <- img_list[order(img_list$acquisitionDate),]
 # Which image dates are available?
 knitr::kable(img_list$acquisitionDate)
 ```
+
+## Derive water surfaces
+
 ### Loop over available images
 
 ```{r water-surface}
-# Setup Output directory
-Output_dir <- "Output"
-if (!dir.exists(Output_dir)) {
-  dir.create(Output_dir)
-}
-
 # We already have collection from above;
 # Refresh token:
 tok <- CDSE::GetOAuthToken(id = creds$clientid, secret = creds$secret)
@@ -101,6 +109,7 @@ water_rast_list <- lapply(1:nrow(img_list), function(i) {
 water_rast_list <- unlist(water_rast_list)
 message("Saved: ", length(water_rast_list), " water surface raster files.")
 ```
+
 ### Plot water surface map
 
 ```{r plot1}
@@ -129,14 +138,17 @@ water_thresh_list <- unlist(water_thresh_list)
 
 ### Plot thresholded water surface
 
+#### for first date in range
+
 ```{r water-thresh1}
-# Take first water surface map in list
 thresh_file <- water_thresh_list[1]
 r <- rast(thresh_file)
 leaflet() |> 
   addTiles() |>
   addRasterImage(r)
 ```
+
+#### second date
 
 ```{r water-thresh2}
 # and the second image
@@ -147,6 +159,7 @@ leaflet() |>
   addRasterImage(r)
 ```
 
+#### last date in range
 
 ```{r water-thresh3}
 # Now the last water surface map in list
@@ -157,9 +170,9 @@ leaflet() |>
   addRasterImage(r)
 ```
 
-### Extract value at point for all water rasters
+## Extract value at point for all water rasters
 
-#### Choose a sampling point
+### Choose a sampling point
 
 ```{r sample-point}
 # Show the point on map
@@ -174,7 +187,7 @@ leaflet() |>
                    fillColor = "red", stroke = FALSE, fillOpacity = 1)
 ```
 
-#### Extract time series of MNDWI values at that point
+### Extract time series of MNDWI values at that point
 
 ```{r extract}
 water_val_list <- lapply(water_rast_list, function(x) {
@@ -193,7 +206,7 @@ vals_df <- do.call(rbind, water_val_list)
 knitr::kable(vals_df)
 ```
 
-#### Time series plit
+### Time series plot
 
 ```{r plot-timeseries}
 ggplot(vals_df) +
@@ -205,6 +218,101 @@ ggplot(vals_df) +
   theme(axis.text.x = element_text(angle = 30),
         legend.position = "")
 ```
+
+## Build OPTRAM model
+
+#### Call rOPTRAM function to acquire indices
+
+(@sadeghi_optical_2017, @babaeian_new_2019)
+
+Using R package `rOPTRAM` (@silver_2023_roptram)
+
+```{r acquire, results='hide', warning=FALSE, message=FALSE}
+# Install package from ROpenSci github
+# remotes::install_github("ropensci/rOPTRAM")
+library(rOPTRAM)
+optram_options("max_cloud", max_cloud, show_opts = FALSE)
+optram_options("plot_colors", "density", show_opts = FALSE)
+optram_options("veg_index", "SAVI", show_opts = FALSE)
+optram_options("rm.hi.str", TRUE, show_opts = FALSE)
+optram_options("rm.low.vi", TRUE, show_opts = FALSE)
+optram_options("only_vi_str", TRUE, show_opts = FALSE)
+optram_options("tileid", tileid, show_opts = FALSE)
+optram_options("resolution", 20)
+
+# Acquire and process S2 based indices
+# Note: optram_option "overwrite" = FALSE means that previously downloaded images will not be download again.
+STR_list <- optram_acquire_s2(aoi = aoi,
+                              from_date = from_date,
+                              to_date = to_date, 
+                              output_dir = Output_dir)
+```
+
+
+### Build OPTRAM model
+
+```{r build}
+VI_dir <- file.path(Output_dir, getOption("optram.veg_index"))
+VI_list <- list.files(VI_dir, full.names = TRUE)
+STR_dir <- file.path(Output_dir, "STR")
+STR_list <- list.files(STR_dir, full.names = TRUE)
+
+# Collect table of VI and STR values
+# If VI_STR_df file already exists, use it (no need to recollate)
+VI_STR_file <- file.path(Output_dir, "VI_STR_data.rds")
+if (file.exists(VI_STR_file)) {
+  VI_STR_df <- readRDS(VI_STR_file)
+} else {
+  VI_STR_df <- optram_ndvi_str(STR_list, VI_list,
+                               output_dir = Output_dir)
+}
+optram_rmse <- optram_wetdry_coefficients(VI_STR_df, output_dir = Output_dir)
+```
+
+### Plot trapezoid
+
+```{r plot-trapezoid, warning=FALSE, message=FALSE, fig.show='hide',  results = FALSE}
+edges_df <- read.csv(file.path(Output_dir, "trapezoid_edges_lin.csv"))
+
+pl <- plot_vi_str_cloud(full_df = VI_STR_df,
+                  edges_df = edges_df,
+                  edge_points = TRUE)
+pl + ggtitle("Trapezoid Plot for Doñana Marsh", subtitle = "images from 2025")
+pl_file <- "trapezoid_plot.png"
+ggsave(file.path(Output_dir, pl_file),
+       width=24, height=15, units = "cm")
+```
+#### Show plot
+
+```{r show-plot, warning=FALSE, message=FALSE, results = FALSE}
+pl
+```
+
+### Get soil moisture map for last date
+
+```{r soil-moisture}
+last_date <- as.character(img_list$acquisitionDate[nrow(img_list)])
+SM <- rOPTRAM::optram_calculate_soil_moisture(
+  img_date = last_date,
+  VI_dir = VI_dir,  # defined above
+  STR_dir = STR_dir,
+  data_dir = Output_dir,
+  output_dir = Output_dir)
+```
+
+### Plot soil moisture
+
+```{r plot-sm, warning=FALSE, message=FALSE}
+pal <- leaflet::colorBin("viridis",
+                         domain = c(-0.10, 10.0),
+                         na.color = "#00000000")
+leaflet() |>
+  addTiles() |>
+  addRasterImage(SM, colors = pal)
+```
+
+  
+<br/><br/>
 
 ## License
 

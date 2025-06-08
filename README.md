@@ -5,6 +5,7 @@ output:
   html_document: default
 linkcolor: blue
 urlcolor: blue
+bibliography: references.bib
 ---
 
 ![](eLTER_SC_Logo.png)
@@ -27,7 +28,7 @@ Each workshop participant should do the following on her laptop:
   - matching the version of `R` that was installed
 - Install RStudio&trade; from [Posit](https://posit.co/download/rstudio-desktop/)
 - Once `R` is installed, the following packages should also be added:
-  - `terra`, `sf`, `remotes`, `CDSE`, `rOPTRAM`, `leaflet`, 'ggplot2` 
+  - `terra`(@hijmans_2025_terra), `sf`, `remotes`, `CDSE`(@R-CDSE), `rOPTRAM`(@silver_2023_roptram), `leaflet`, `ggplot2`;
   - At the R command line, run:
   - `install.packages(c("terra", "sf", "remotes", "ggplot2", "leaflet"), dependencies = TRUE)`
   - `remotes::install_github("zivankaraman/CDSE")`
@@ -54,6 +55,8 @@ Each workshop participant should do the following on her laptop:
 
 ### Code and data
 
+The exercise focuses on Doñana Park in Spain. (@green_groundwater_2024).
+
 Each participant can download the exercises and data in advance in one of three ways:
 
 - Particpants who are familiar with `git` can clone the repository: 
@@ -62,8 +65,7 @@ Each participant can download the exercises and data in advance in one of three 
 
 - The same result can be achieved within RStudio&trade; by starting a new Version Control based project, pointing to the same repository;
 
-- Otherwise, the workshop material can be downloaded as a zip archive from [here](https://github.com/micha-silver/elter-2025-R-workshop/archive/refs/heads/main.zip) .
-
+- Otherwise, the workshop material can be downloaded as a zip archive from [here](https://github.com/micha-silver/elter-2025-R-workshop/archive/refs/heads/main.zip);
 
 Put your `credentials.csv` file into the same directory as the exercise.
 
@@ -91,3 +93,5 @@ eLTER Workshop-Analyzing Remote Sensing Data in R
 is licensed under Creative Commons Attribution-ShareAlike 4.0 International.
 
 To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/4.0/
+
+## References
