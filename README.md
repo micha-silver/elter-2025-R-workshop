@@ -8,7 +8,7 @@ urlcolor: blue
 bibliography: references.bib
 ---
 
-![](eLTER_SC_Logo.png)
+![](./figures/eLTER_SC_Logo.png)
 
 # Analyzing Remote Sensing Data with R
 
@@ -29,7 +29,7 @@ Each workshop participant should do the following on her laptop:
 - Install RStudio&trade; from [Posit](https://posit.co/download/rstudio-desktop/)
 - Once `R` is installed, the following packages should also be added:
   - `terra`(@hijmans_2025_terra), `sf`, `remotes`, `CDSE`(@R-CDSE), `rOPTRAM`(@silver_2023_roptram), `leaflet`, `ggplot2`;
-  - At the R command line, run:
+  - At the R command line or in RStudio&trade; run:
   - `install.packages(c("terra", "sf", "remotes", "ggplot2", "leaflet"), dependencies = TRUE)`
   - `remotes::install_github("zivankaraman/CDSE")`
   - `remotes::install_github("ropensci/rOPTRAM")`
@@ -42,13 +42,13 @@ Each workshop participant should do the following on her laptop:
 
 | CDSE Authentication | Steps |
 | ----------------------------------- | ----------------------------------- |
-|![CDSE-1](../Presentation/figures/CDSE_1.png)|![CDSE-2](../Presentation/figures/CDSE_2.png)|
+|![CDSE-1](./figures/CDSE_1.png)|![CDSE-2](./figures/CDSE_2.png)|
 | Browse to portal | Register for an account (of Login if you already have an account)
-|![CDSE-3](../Presentation/figures/CDSE_3.png)|![CDSE-4](../Presentation/figures/CDSE_4.png)|
+|![CDSE-3](./figures/CDSE_3.png)|![CDSE-4](./figures/CDSE_4.png)|
 | Go to Sentinel Hub | Open User settings | 
-|![CDSE-5](../Presentation/figures/CDSE_5.png)|![CDSE-6](../Presentation/figures/CDSE_6.png)|
+|![CDSE-5](./figures/CDSE_5.png)|![CDSE-6](./figures/CDSE_6.png)|
 | Create a new OAuth client | Set expiration date and click Create |
-|![CDSE-7](../Presentation/figures/CDSE_7.png)|![CDSE-8](../Presentation/figures/CDSE_8.png)|
+|![CDSE-7](./figures/CDSE_7.png)|![CDSE-8](./figures/CDSE_8.png)|
 | Copy both the clientid and the secret... | ... and **save** to `credentials.csv` file |
 
 ## Workshop Exercise
@@ -76,12 +76,12 @@ Start RStudio&trade; and load the project "elter-2025-R-workshop".
 - Load packages, set parameters;
 - Query CDSE catalog for available images;
 - Filter for low cloud cover, and only a single Copernicus tileId;
-- Loop over list of available image dates;
-- Derive MNDWI index for each image;
-- Threshold MNDWI to obtain open water surfaces;
+- Loop over list of available images;
+  - Derive MNDWI index for each image date;
+  - Threshold MNDWI to obtain open water surfaces;
 - Plot time series of MNDWI values;
 - Prepare OPTRAM model from list of available dates;
-- Derive soil moisture for one date using model coefficients.
+  - Derive soil moisture for one date using OPTRAM model coefficients.
 
 
 ## License
