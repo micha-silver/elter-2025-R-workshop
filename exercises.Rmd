@@ -21,6 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 pkg_list <- c("terra", "sf", "CDSE", "knitr", "leaflet", "ggplot2")
 invisible(lapply(pkg_list, library, character.only = TRUE))
 ```
+
 ### Get CDSE credentials
 
 #### and prepare OAuth token for API access
@@ -121,7 +122,9 @@ leaflet() |> addTiles() |>
 
 ### Threshold to get just water surfaces
 
-#### Using the threshold value 0.09 (@xu_modification_2006)
+#### Using the threshold value 0.09 (@xu_modification_2006);
+
+#### The `classify` function in `terra` is called to reclassify water surfaces.
 
 ```{r water-thresh}
 thresh <- 0.09
@@ -145,7 +148,7 @@ thresh_file <- water_thresh_list[1]
 r <- rast(thresh_file)
 leaflet() |> 
   addTiles() |>
-  addRasterImage(r)
+  addRasterImage(r, colors = "blue")
 ```
 
 #### second date
@@ -156,7 +159,7 @@ thresh_file <- water_thresh_list[2]
 r <- rast(thresh_file)
 leaflet() |> 
   addTiles() |>
-  addRasterImage(r)
+  addRasterImage(r, colors = "blue")
 ```
 
 #### last date in range
@@ -167,7 +170,7 @@ thresh_file <- water_thresh_list[length(water_thresh_list)]
 r <- rast(thresh_file)
 leaflet() |>
   addTiles() |>
-  addRasterImage(r)
+  addRasterImage(r, colors = "blue")
 ```
 
 ## Extract value at point for all water rasters
