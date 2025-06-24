@@ -43,7 +43,7 @@ Each workshop participant should do the following on her laptop:
 | CDSE Authentication | Steps |
 | ----------------------------------- | ----------------------------------- |
 |![CDSE-1](./figures/CDSE_1.png)|![CDSE-2](./figures/CDSE_2.png)|
-| Browse to portal | Register for an account (of Login if you already have an account)
+| Browse to portal | Register for an account (or Login if you already have an account)
 |![CDSE-3](./figures/CDSE_3.png)|![CDSE-4](./figures/CDSE_4.png)|
 | Go to Sentinel Hub | Open User settings | 
 |![CDSE-5](./figures/CDSE_5.png)|![CDSE-6](./figures/CDSE_6.png)|
@@ -78,7 +78,7 @@ Start RStudio&trade; and load the project "elter-2025-R-workshop".
 - Filter for low cloud cover, and only a single Copernicus tileId;
 - Loop over list of available images;
   - Derive MNDWI index for each image date;
-  - Threshold MNDWI to obtain open water surfaces;
+  - Threshold MNDWI to obtain open water surfaces (@xu_modification_2006);
 - Plot time series of MNDWI values;
 - Prepare OPTRAM model from list of available dates;
   - Derive soil moisture for one date using OPTRAM model coefficients.

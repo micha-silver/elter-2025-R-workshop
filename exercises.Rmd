@@ -232,8 +232,9 @@ Using R package `rOPTRAM` (@silver_2023_roptram)
 
 ```{r acquire, results='hide', warning=FALSE, message=FALSE}
 # Install package from ROpenSci github
-# remotes::install_github("ropensci/rOPTRAM")
+remotes::install_github("ropensci/rOPTRAM")
 library(rOPTRAM)
+
 optram_options("max_cloud", max_cloud, show_opts = FALSE)
 optram_options("plot_colors", "density", show_opts = FALSE)
 optram_options("veg_index", "SAVI", show_opts = FALSE)
