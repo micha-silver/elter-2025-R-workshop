@@ -181,8 +181,8 @@ leaflet() |>
 # Show the point on map
 coords <- data.frame("lon" = -6.3710,
                      "lat" = 37.0375)
-pt <- vect(coords, crs = "EPSG:4326")
-r <- rast(water_rast_list[2])
+pt <- terra::vect(coords, crs = "EPSG:4326")
+r <- terra::rast(water_rast_list[2])
 leaflet() |>
   addTiles() |>
   addRasterImage(r) |>
@@ -204,7 +204,7 @@ water_val_list <- lapply(water_rast_list, function(x) {
   names(val_df) <- c("Image_date", "MNDWI")
   return(val_df)
 })
-# Bind list into data.frame
+# Bind list into data.frame, using rbind()
 vals_df <- do.call(rbind, water_val_list)
 knitr::kable(vals_df)
 ```
@@ -249,7 +249,9 @@ optram_options("resolution", 20)
 STR_list <- optram_acquire_s2(aoi = aoi,
                               from_date = from_date,
                               to_date = to_date, 
-                              output_dir = Output_dir)
+                              output_dir = Output_dir,
+                              clientid = creds$clientid,
+                              secret = creds$secret)
 ```
 
 
